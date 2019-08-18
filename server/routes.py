@@ -27,6 +27,14 @@ def subscribe():
 
         if valid:
             # TODO: Schedule background task. If background task can fail, then need to update the 200/400 handling
+            try:
+                result = Subscribers(number=params['number'], time="12:00:00")
+                # Only add number if not unique
+                db.session.add(result)
+                db.session.commit()
+                print("User added. User id={}".format(result.id))
+            except Exception as e:
+                print(str(e))
             return 'Success', 200
         else:
             # Input number is not valid
@@ -48,6 +56,17 @@ def receive():
         if valid:
             # TODO: Schedule background task. If background task can fail, then need to update the 200/400 handling
             # Background task here takes in number/content and checks to see if need to confirm subscription, delete subscription, or handle untracked phone number
+            # query
+            try:
+                user = Subscribers.query.filter_by(number=params['number']).first()
+                if user and (params['content'] == 'YES' or params['content'] == 'yes'):
+                    user.confirmed = True
+                    db.session.commit()
+                else:
+                    print("Not a valid user")
+            except Exception as e:
+                print(str(e))
+            
             return 'Success', 200
         else:
             # Input number is not valid
@@ -62,10 +81,15 @@ def receive():
 @app.route('/new_user', methods=['GET'])
 def addUser():
     try:
-        result = Subscribers(number="1234567890", time="12:00:00")
-        db.session.add(result)
-        db.session.commit()
-        return "User added. User id={}".format(result.id)
+        # Check if phone number already exists
+        subscriber = Subscribers.query.filter_by(number="1234567890").first()
+        if not subscriber:
+            result = Subscribers(number="1234567890", time="12:00:00")
+            db.session.add(result)
+            db.session.commit()
+            return "User added. User id={}".format(result.id)
+        else:
+            return "User already exists"
     except Exception as e:
         return(str(e))
 
@@ -76,6 +100,16 @@ def allUsers():
         return  jsonify([e.serialize() for e in results])
     except Exception as e:
 	    return(str(e))
+
+@app.route("/delete_users", methods=['GET'])
+def deleteUsers():
+    try:
+        results = Subscribers.query.delete()
+        print(results)
+        db.session.commit()
+        return "Deleted users"
+    except Exception as e:
+        return(str(e))
 
 @app.route("/new_quote", methods=['GET'])
 def addQuote():
@@ -94,3 +128,13 @@ def allQuotes():
         return  jsonify([e.serialize() for e in results])
     except Exception as e:
 	    return(str(e))
+
+@app.route("/delete_quotes", methods=['GET'])
+def deleteQuotes():
+    try:
+        results = Quotes.query.delete()
+        print(results)
+        db.session.commit()
+        return "Deleted quotes"
+    except Exception as e:
+        return(str(e))
