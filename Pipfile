@@ -13,6 +13,8 @@ flask-migrate = "*"
 python-dotenv = "*"
 flask-script = "*"
 psycopg2 = "==2.7.3.1"
+twillo = "*"
+twilio = "*"
 
 [requires]
 python_version = "3.6"
