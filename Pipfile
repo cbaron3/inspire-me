@@ -13,7 +13,6 @@ flask-migrate = "*"
 python-dotenv = "*"
 flask-script = "*"
 psycopg2 = "==2.7.3.1"
-twillo = "*"
 twilio = "*"
 gunicorn = "*"
 
