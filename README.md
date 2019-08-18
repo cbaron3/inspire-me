@@ -32,4 +32,14 @@ Need two endpoints:
         instead of using two tables, use one table called Users that has PhoneNumber, Confirmed, TimeZone
 
 Also need a process to run every 24 hours to send a message to all subcribers. also can add timezone
-        
+
+How the schedule will work is as follows:
+
+1) have clock process do something every X amount of time
+https://devcenter.heroku.com/articles/clock-processes-python
+2) when that clock process is triggered, dont do actual work in that function but schedule a background task instead
+https://devcenter.heroku.com/articles/scheduled-jobs-custom-clock-processes#overview
+3) background task will query database for all confirmed users and send them a text
+https://devcenter.heroku.com/articles/python-rq
+
+also need the whole api access
