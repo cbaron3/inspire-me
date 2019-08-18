@@ -1,17 +1,9 @@
 from flask import Flask, jsonify, request
-from flask_cors import CORS
-
-# configuration
-DEBUG = True
-
-# instantiate the app
-app = Flask(__name__)
-app.config.from_object(__name__)
-
-# enable CORS
-CORS(app, resources={r'/*': {'origins': '*'}})
-
+import os
+from server import app, db
 import re
+
+from server.models import Subscribers, Quotes
 
 def validNumber(number):
     # NOTE: Check for better options like better regex or phonenumbers lib
@@ -65,6 +57,40 @@ def receive():
         print(str(e))
         return 'Failure', 400
         
+# Database debugging routes
+# add user
+@app.route('/new_user', methods=['GET'])
+def addUser():
+    try:
+        result = Subscribers(number="1234567890", time="12:00:00")
+        db.session.add(result)
+        db.session.commit()
+        return "User added. User id={}".format(result.id)
+    except Exception as e:
+        return(str(e))
 
-if __name__ == '__main__':
-    app.run()
+@app.route("/all_users", methods=['GET'])
+def allUsers():
+    try:
+        results=Subscribers.query.all()
+        return  jsonify([e.serialize() for e in results])
+    except Exception as e:
+	    return(str(e))
+
+@app.route("/new_quote", methods=['GET'])
+def addQuote():
+    try:
+        result = Quotes(quote="To be or not to be", quote_hash=1234)
+        db.session.add(result)
+        db.session.commit()
+        return "Quote added. Quote id={}".format(result.id)
+    except Exception as e:
+        return(str(e))
+
+@app.route("/all_quotes", methods=['GET'])
+def allQuotes():
+    try:
+        results = Quotes.query.all()
+        return  jsonify([e.serialize() for e in results])
+    except Exception as e:
+	    return(str(e))

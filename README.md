@@ -43,3 +43,23 @@ https://devcenter.heroku.com/articles/scheduled-jobs-custom-clock-processes#over
 https://devcenter.heroku.com/articles/python-rq
 
 also need the whole api access
+
+also need table to store quotes to make sure no duplicates. If duplicate query random table element and resend
+
+predicted files:
+init
+    init app
+config
+    app configuration
+model
+    database oom
+clock
+    used for scheduled processes
+routes
+    hold routes for app
+quotes
+    api access
+manage
+    db migrations
+run
+    run app
