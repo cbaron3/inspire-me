@@ -63,3 +63,7 @@ manage
     db migrations
 run
     run app
+
+
+Twilio instructions
+https://www.twilio.com/docs/sms/tutorials/how-to-receive-and-reply-python
