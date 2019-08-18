@@ -28,13 +28,17 @@ def subscribe():
         if valid:
             # TODO: Schedule background task. If background task can fail, then need to update the 200/400 handling
             try:
-                result = Subscribers(number=params['number'], time="12:00:00")
-                # Only add number if not unique
-                db.session.add(result)
-                db.session.commit()
-                print("User added. User id={}".format(result.id))
+                subscriber = Subscribers.query.filter_by(number=params['number']).first()
+                if not subscriber:
+                    result = Subscribers(number=params['number'], time="12:00:00")
+                    db.session.add(result)
+                    db.session.commit()
+                    print("User added. User id={}".format(result.id))
+                else:
+                    print("User already exists")
             except Exception as e:
                 print(str(e))
+
             return 'Success', 200
         else:
             # Input number is not valid
