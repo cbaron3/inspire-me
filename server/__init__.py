@@ -14,4 +14,6 @@ db = SQLAlchemy(app)
 # enable CORS
 CORS(app, resources={r'/*': {'origins': '*'}})
 
+# Need to add clock: python clock.py to Procfile and only import clock when not on heroku for debugging
+from server import clock
 from server import routes

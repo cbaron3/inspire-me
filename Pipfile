@@ -15,6 +15,7 @@ flask-script = "*"
 psycopg2 = "==2.7.3.1"
 twilio = "*"
 gunicorn = "*"
+apscheduler = "*"
 
 [requires]
 python_version = "3.6"

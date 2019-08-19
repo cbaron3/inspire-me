@@ -1,15 +1,10 @@
-from flask import Flask, jsonify, request
 import os
+
+from flask import Flask, jsonify, request
+
 from server import app, db
-import re
-
 from server.models import Subscribers, Quotes
-
-def validNumber(number):
-    # NOTE: Check for better options like better regex or phonenumbers lib
-    pattern1 = re.compile("^[\dA-Z]{3}-[\dA-Z]{3}-[\dA-Z]{4}$", re.IGNORECASE)
-    pattern2 = re.compile("^[\dA-Z]{3}[\dA-Z]{3}[\dA-Z]{4}$", re.IGNORECASE)
-    return (pattern1.match(number) is not None) or (pattern2.match(number) is not None)
+from server.util import validNumber
 
 # Subcribe route
 # TODO: I think I need to add headers or something here so that people can just post to my backend
@@ -50,7 +45,8 @@ def subscribe():
     
 # Receive route
 @app.route('/receive', methods=['POST'])
-def receive():
+def receive(): 
+    # https://www.twilio.com/blog/2016/09/how-to-receive-and-respond-to-a-text-message-with-python-flask-and-twilio.html
     params = request.args.to_dict()
 
     try:
@@ -81,7 +77,8 @@ def receive():
         return 'Failure', 400
         
 # Database debugging routes
-# add user
+
+# Create new dummy users
 @app.route('/new_user', methods=['GET'])
 def addUser():
     try:
@@ -97,6 +94,7 @@ def addUser():
     except Exception as e:
         return(str(e))
 
+# Show all users in db
 @app.route("/all_users", methods=['GET'])
 def allUsers():
     try:
@@ -105,6 +103,7 @@ def allUsers():
     except Exception as e:
 	    return(str(e))
 
+# Delete all users from db
 @app.route("/delete_users", methods=['GET'])
 def deleteUsers():
     try:
@@ -115,6 +114,7 @@ def deleteUsers():
     except Exception as e:
         return(str(e))
 
+# Create new dummy quote
 @app.route("/new_quote", methods=['GET'])
 def addQuote():
     try:
@@ -125,6 +125,7 @@ def addQuote():
     except Exception as e:
         return(str(e))
 
+# Show all quotes in db
 @app.route("/all_quotes", methods=['GET'])
 def allQuotes():
     try:
@@ -133,6 +134,7 @@ def allQuotes():
     except Exception as e:
 	    return(str(e))
 
+# Delete all quotes in db
 @app.route("/delete_quotes", methods=['GET'])
 def deleteQuotes():
     try:
