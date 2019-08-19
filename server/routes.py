@@ -51,6 +51,7 @@ def receive():
 
     try:
         number = request.form['From']
+        print(number)
         message_body = request.form['Body']
 
         valid = validNumber(number)
