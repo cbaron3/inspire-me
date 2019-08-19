@@ -47,11 +47,14 @@ def subscribe():
 @app.route('/receive', methods=['POST'])
 def receive(): 
     # https://www.twilio.com/blog/2016/09/how-to-receive-and-respond-to-a-text-message-with-python-flask-and-twilio.html
-    params = request.args.to_dict()
+    #params = request.args.to_dict()
 
     try:
-        valid = validNumber(params['number'])
-        print(params['content'])
+        number = request.form['From']
+        message_body = request.form['Body']
+
+        valid = validNumber(number)
+        print(message_body)
 
         if valid:
             # TODO: Schedule background task. If background task can fail, then need to update the 200/400 handling
@@ -70,9 +73,11 @@ def receive():
             return 'Success', 200
         else:
             # Input number is not valid
+            print('Invalid number')
             return 'Failure', 400
     except Exception as e:
         # If input parameters does not have term 'number' and/or 'content', return Bad Request error
+        print('Invalid headers')
         print(str(e))
         return 'Failure', 400
         
