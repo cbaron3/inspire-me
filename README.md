@@ -1,69 +1,68 @@
-# Inspire.Me
-Service that you sign up and receive a daily inspirational quote
-Need two endpoints:
+This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
-1) /subscribe/[number]
-    endpoint when user subscribes to the service
-    results:
-        add number to NewUsers
-        send text
+## Available Scripts
 
-2) /receive/[number]?[content]
-    connected with twillo so triggered on every text received
-    results:
+In the project directory, you can run:
 
-        1) if number is in NewUsers
-            if content says YES
-                remove from NewUsers
-                add to ConfirmedUsers
-                respond with "Thanks you are confirmed"
-            else
-                nothing or tell user to send something
-                respond with something
+### `yarn start`
 
-        2) if number is in ConfirmedUsers
-            if content says STOP
-                remove from ConfirmedUsers
-                respond with thanks message
+Runs the app in the development mode.<br />
+Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
 
-        3) Else, number in neither table
-            respond with "Please subscribe at https://..."
+The page will reload if you make edits.<br />
+You will also see any lint errors in the console.
 
-        instead of using two tables, use one table called Users that has PhoneNumber, Confirmed, TimeZone
+### `yarn test`
 
-Also need a process to run every 24 hours to send a message to all subcribers. also can add timezone
+Launches the test runner in the interactive watch mode.<br />
+See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
 
-How the schedule will work is as follows:
+### `yarn build`
 
-1) have clock process do something every X amount of time
-https://devcenter.heroku.com/articles/clock-processes-python
-2) when that clock process is triggered, dont do actual work in that function but schedule a background task instead
-https://devcenter.heroku.com/articles/scheduled-jobs-custom-clock-processes#overview
-3) background task will query database for all confirmed users and send them a text
-https://devcenter.heroku.com/articles/python-rq
+Builds the app for production to the `build` folder.<br />
+It correctly bundles React in production mode and optimizes the build for the best performance.
 
-also need the whole api access
+The build is minified and the filenames include the hashes.<br />
+Your app is ready to be deployed!
 
-also need table to store quotes to make sure no duplicates. If duplicate query random table element and resend
+See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
 
-predicted files:
-init
-    init app
-config
-    app configuration
-model
-    database oom
-clock
-    used for scheduled processes
-routes
-    hold routes for app
-quotes
-    api access
-manage
-    db migrations
-run
-    run app
+### `yarn eject`
 
+**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
 
-Twilio instructions
-https://www.twilio.com/docs/sms/tutorials/how-to-receive-and-reply-python
+If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+
+Instead, it will copy all the configuration files and the transitive dependencies (Webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+
+You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+
+## Learn More
+
+You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+
+To learn React, check out the [React documentation](https://reactjs.org/).
+
+### Code Splitting
+
+This section has moved here: https://facebook.github.io/create-react-app/docs/code-splitting
+
+### Analyzing the Bundle Size
+
+This section has moved here: https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size
+
+### Making a Progressive Web App
+
+This section has moved here: https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app
+
+### Advanced Configuration
+
+This section has moved here: https://facebook.github.io/create-react-app/docs/advanced-configuration
+
+### Deployment
+
+This section has moved here: https://facebook.github.io/create-react-app/docs/deployment
+
+### `yarn build` fails to minify
+
+This section has moved here: https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify
