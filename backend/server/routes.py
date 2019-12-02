@@ -1,5 +1,5 @@
 # Flask
-from flask import request
+from flask import request, jsonify
 from flask_cors import cross_origin
 
 
@@ -10,7 +10,8 @@ from twilio.rest import Client
 # Secrets
 from server.secrets import FROM_NUMBER, TO_NUMBER
 
-from server import app, twilio_client
+from server import app, twilio_client, db
+from server.models import Subscriber, Quote
 
 # HTTP Actions
     # Get
@@ -91,5 +92,156 @@ def sms():
     
     return str(resp)
 
-if __name__ == "__main__":
-    app.run()
+
+@app.errorhandler(404)
+def not_found_error(error):
+    return 'Error', 404
+
+@app.errorhandler(500)
+def internal_error(error):
+    db.session.rollback()
+    return 'Error', 500
+
+# ************* USERS ************* #
+
+# Get all users, delete all users
+@app.route("/api/v1/resources/users", methods=['GET', 'DELETE'])
+def allUsers():
+    if request.method == 'GET':
+        try:
+            books = Subscriber.query.all()
+            return jsonify([e.serialize() for e in books])
+        except Exception as e:
+            db.session.rollback()
+            return(str(e))
+    elif request.method == 'DELETE':
+        try:
+            books = Subscriber.query.delete()
+            db.session.commit()
+            return "All users deleted"
+        except Exception as e:
+            db.session.rollback()
+            return(str(e))
+    else:
+        # Invalid method, return error
+        return "All users invalid method", 404
+
+# Get a user, delete a user
+@app.route("/api/v1/resources/users/<int:id>", methods=['GET', 'DELETE'])
+def singleUser(id):
+    # Single user by ID
+    if request.method == 'GET':
+        try:
+            user = Subscriber.query.get(id)
+            return jsonify(user.serialize())
+        except Exception as e:
+            db.session.rollback()
+            return(str(e))
+    elif request.method == 'DELETE':
+        try:
+            user = Subscriber.query.filter_by(id=id).delete()
+            print(user)
+            db.session.commit()
+            if user:
+                return 'Deleted user'
+            else:
+                return 'User does not exist'
+        except Exception as e:
+            db.session.rollback()
+            return(str(e))
+        pass
+    else:
+        # Invalid method, return error
+        pass
+
+# Update user by ID
+@app.route("/api/v1/resources/users/<int:id>/", methods=['PUT'])
+def updateUser(id):
+    # Update user by add
+    pass
+
+
+# Create user with filters. Check if user with number exists
+@app.route("/api/v1/resources/users/", methods=['GET', 'POST'])
+def newUsers():
+    # Create user; similar to subscribe method tho...supply phone number and time
+    pass
+
+
+# Dummy user for testing
+@app.route("/api/v1/resources/users/dummy", methods=['GET', 'POST'])
+def dummyUser():
+    try:
+        result = Subscriber(number='123-456-7890', time='12:00')
+        db.session.add(result)
+        db.session.commit()
+        return "Subscriber added. Subscriber id={}".format(result.id)
+    except Exception as e:
+        db.session.rollback()
+        return(str(e))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# ************* QUOTES ************* #
+# Get all quotes
+@app.route("/api/v1/resources/quotes/all", methods=['GET', 'DELETE'])
+def allQuotes():
+    if request.method == 'GET':
+        try:
+            books = Quote.query.all()
+            return jsonify([e.serialize() for e in books])
+        except Exception as e:
+            db.session.rollback()
+            return(str(e))
+    elif request.method == 'DELETE':
+        try:
+            books = Quote.query.delete()
+            db.session.commit()
+            return "All quotes deleted"
+        except Exception as e:
+            db.session.rollback()
+            return(str(e))
+    else:
+        # Invalid method, return error
+        return "All users invalid method", 404
+
+# Get a quotes, delete a quotes, update a user
+@app.route("/api/v1/resources/quotes/<int:id>", methods=['GET', 'PUT', 'DELETE'])
+def singleQuote():
+    if request.method == 'GET':
+        pass
+    elif request.method == 'PUT':
+        pass
+    elif request.method == 'DELETE':
+        pass
+    else:
+        # Invalid method, return error
+        pass
+
+# Get quotes with filters
+# Add a new quotes with parameters
+# Delete a quotes based on parameters
+@app.route("/api/v1/resources/quotes", methods=['GET', 'POST', 'DELETE'])
+def filteredQuotes():
+    if request.method == 'GET':
+        pass
+    elif request.method == 'POST':
+        pass
+    elif request.method == 'DELETE':
+        pass
+    else:
+        # Invalid method, return error
+        pass
