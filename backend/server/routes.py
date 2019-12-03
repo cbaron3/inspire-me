@@ -95,102 +95,148 @@ def sms():
 
 @app.errorhandler(404)
 def not_found_error(error):
-    return 'Error', 404
+    return 'Invalid route', 404
 
 @app.errorhandler(500)
 def internal_error(error):
     db.session.rollback()
     return 'Error', 500
 
-# ************* USERS ************* #
-
-# Get all users, delete all users
-@app.route("/api/v1/resources/users", methods=['GET', 'DELETE'])
+# Subscribers API:
+#   Get all users (filters are optional)
+#   Delete all users (filters are optional)
+#   Add new user (filters required)
+@app.route("/api/v1/resources/users", methods=['GET', 'POST', 'DELETE'])
 def allUsers():
     if request.method == 'GET':
+        # Get all users
         try:
-            books = Subscriber.query.all()
-            return jsonify([e.serialize() for e in books])
-        except Exception as e:
-            db.session.rollback()
-            return(str(e))
-    elif request.method == 'DELETE':
-        try:
-            books = Subscriber.query.delete()
-            db.session.commit()
-            return "All users deleted"
-        except Exception as e:
-            db.session.rollback()
-            return(str(e))
-    else:
-        # Invalid method, return error
-        return "All users invalid method", 404
+            number = request.args.get('phone_number')
+            timezone = request.args.get('timezone')
+            
+            # TODO: Validate timezone and number
+            if number and timezone:
+                books = Subscriber.query.filter_by(number=number, time=timezone)
+            elif number:
+                books = Subscriber.query.filter_by(number=number)
+            elif timezone:
+                books = Subscriber.query.filter_by(time=timezone)
+            else:
+                books = Subscriber.query.all()
 
-# Get a user, delete a user
-@app.route("/api/v1/resources/users/<int:id>", methods=['GET', 'DELETE'])
+            return jsonify([e.serialize() for e in books]), 200
+        except Exception as e:
+            db.session.rollback()
+            print('Exception when getting all users: {}'.format(str(e)))
+            return jsonify({'message': 'Exception when getting all users'}), 404
+
+    if request.method == 'DELETE':
+        # Delete all users
+        try:
+            number = request.args.get('phone_number')
+            timezone = request.args.get('timezone')
+            
+            # TODO: Validate timezone and number
+            if number and timezone:
+                deleted = Subscriber.query.filter_by(number=number, time=timezone).delete()
+            elif number:
+                deleted = Subscriber.query.filter_by(number=number).delete()
+            elif timezone:
+                deleted = Subscriber.query.filter_by(time=timezone).delete()
+            else:
+                deleted = Subscriber.query.delete()
+
+            db.session.commit()
+            return jsonify({'Deleted': deleted}), 200
+        except Exception as e:
+            db.session.rollback()
+            print('Exception when deleting all users: {}'.format(str(e)))
+            return jsonify({'message': 'Exception when deleting all users'}), 404
+
+    if request.method == 'POST':
+        try:
+            number = request.args.get('phone_number')
+            timezone = request.args.get('timezone')
+
+            # Check if number already exists
+            if not number or not timezone:
+                return jsonify({'message': 'Invalid parameters; Need both phone_number and timezone'}), 404
+            else:
+                has_number = Subscriber.query.filter_by(number=number).first()
+                if has_number:
+                    return jsonify({'message': 'There exists a user with that phone number'.format(id)}), 404
+                else:
+                    result = Subscriber(number=number, time=timezone)
+                    db.session.add(result)
+                    db.session.commit()
+                    return "Subscriber added. Subscriber id={}".format(result.id)
+        except Exception as e:
+            db.session.rollback()
+            print('Exception when adding new users: {}'.format(str(e)))
+            return jsonify({'message': 'Exception when adding new users'}), 404
+
+# Subscribers API
+#   Get a user by ID (filters ignored)
+#   Delete a user by ID (filters ignored)
+#   Update a user by ID (need either parameter)
+@app.route("/api/v1/resources/users/<int:id>", methods=['GET', 'PUT', 'DELETE'])
 def singleUser(id):
-    # Single user by ID
     if request.method == 'GET':
+        # Get a single user by ID
         try:
             user = Subscriber.query.get(id)
-            return jsonify(user.serialize())
-        except Exception as e:
-            db.session.rollback()
-            return(str(e))
-    elif request.method == 'DELETE':
-        try:
-            user = Subscriber.query.filter_by(id=id).delete()
-            print(user)
-            db.session.commit()
             if user:
-                return 'Deleted user'
+                return jsonify(user.serialize()), 200
             else:
-                return 'User does not exist'
+                return jsonify({'message': 'User with ID {} does not exist'.format(id)}), 404
         except Exception as e:
             db.session.rollback()
-            return(str(e))
-        pass
-    else:
-        # Invalid method, return error
-        pass
+            print('Exception when getting a user: {}'.format(str(e)))
+            return jsonify({'message': 'Exception when getting a user by id'}), 404
 
-# Update user by ID
-@app.route("/api/v1/resources/users/<int:id>/", methods=['PUT'])
-def updateUser(id):
-    # Update user by add
-    pass
+    if request.method == 'DELETE':
+        try:
+            deleted = Subscriber.query.filter_by(id=id).delete()
+            db.session.commit()
+            if deleted:
+                return jsonify({'message': 'User with ID {} deleted'.format(id)}), 200
+            else:
+                return jsonify({'message': 'User with ID {} does not exist'.format(id)}), 404
+        except Exception as e:
+            db.session.rollback()
+            print('Exception when getting a user: {}'.format(str(e)))
+            return jsonify({'message': 'Exception when deleting a user by id'}), 404
 
+    if request.method == 'PUT':
+        try:
+            # Get user
+            user = Subscriber.query.get(id)
+            if not user:
+                return jsonify({'message': 'User with ID {} does not exist'.format(id)}), 404
 
-# Create user with filters. Check if user with number exists
-@app.route("/api/v1/resources/users/", methods=['GET', 'POST'])
-def newUsers():
-    # Create user; similar to subscribe method tho...supply phone number and time
-    pass
+            # If number supplied, update the number if does not exist in the table
+            number = request.args.get('phone_number')
+            if number:
+                # TODO: Check if valid phone number!!!
+                has_number = Subscriber.query.filter_by(number=number).first()
+                if has_number:
+                    return jsonify({'message': 'There exists a user with that phone number'.format(id)}), 404
+                else:
+                    user.number = number
+            
+            # If timezone supplied, update it
+            # TODO: Validate time zone information!
+            timezone = request.args.get('timezone')
+            if timezone:
+                user.time = timezone
 
+            db.session.commit()
+            return jsonify(user.serialize()), 200
 
-# Dummy user for testing
-@app.route("/api/v1/resources/users/dummy", methods=['GET', 'POST'])
-def dummyUser():
-    try:
-        result = Subscriber(number='123-456-7890', time='12:00')
-        db.session.add(result)
-        db.session.commit()
-        return "Subscriber added. Subscriber id={}".format(result.id)
-    except Exception as e:
-        db.session.rollback()
-        return(str(e))
-
-
-
-
-
-
-
-
-
-
-
-
+        except Exception as e:
+            db.session.rollback()
+            print('Exception when updating a user: {}'.format(str(e)))
+            return jsonify({'message': 'Exception when updating a user by id'}), 404
 
 
 
