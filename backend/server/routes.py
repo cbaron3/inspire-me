@@ -23,7 +23,14 @@ from server.models import Subscriber, Quote
 #   subscribe is similar to POST except also sends a message using twilio. Check if number exists and validate both number and timezone
 #   receive handles twilio webhook. also for checking if user confirms registration. also add easter eggs like perhaps suicide pervention hotline number and the such
     # similar to PUT request but modifies users CONFIRMED status
+    # check if message comes from trusted source. if not, respond with URL 
 
+# Then add background tasking
+
+# Then deploy
+
+# Plan is currenly to send the same quote to everyone; could have track which users received which quotes for variety. 
+    # Everyday send different quotes to users
 
 # Route not found
 @app.errorhandler(404)

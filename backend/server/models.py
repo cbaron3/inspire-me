@@ -1,15 +1,16 @@
-# Setting up PostgreSQL database along with SQLAlchemy and Alembic
-
-# Create database db -- inspire
-
 from server import db
 from sqlalchemy import DateTime
 
+# People subscribing to the inspire me service
 class Subscriber(db.Model):
+    # Table name will be subscribers
     __tablename__ = 'subscribers'
-
-    # ID, NUMBER, SUBSCRIBED, TIME OF DAY
-
+    # Track 
+    #   ID, primary key
+    #   number, number to send/receive SMS to
+    #   confirmed, status of if user is confirmed or not
+    #   time, track what time of day the user wants their message
+        # just unsubscribe to change time?
 
     # Primary key
     id = db.Column(db.Integer, primary_key=True)
@@ -38,9 +39,18 @@ class Subscriber(db.Model):
             'time': self.time,
             'confirmed': str(self.confirmed)
         }
-        
+
+# Track which quotes are sent out.
+# Perhaps track with quotes users received for variety
 class Quote(db.Model):
+    # Tablename will be quotes
     __tablename__ = 'quotes'
+
+    # Track
+    #   ID, primary key
+    #   quote, string containing the actual quote
+    #   quote_hash, hash for simpler comparison
+    #   frequency, check how much it was used
 
     # Primary key
     id = db.Column(db.Integer, primary_key=True)
