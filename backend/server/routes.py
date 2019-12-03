@@ -180,59 +180,44 @@ def singleUser(id):
             print('Exception when updating a user: {}'.format(str(e)))
             return jsonify({'message': 'Exception when updating a user by id'}), 404
 
-
-
-
-# ************* QUOTES ************* #
-# Get all quotes
-@app.route("/api/v1/resources/quotes/all", methods=['GET', 'DELETE'])
-def allQuotes():
-    if request.method == 'GET':
-        try:
-            books = Quote.query.all()
-            return jsonify([e.serialize() for e in books])
-        except Exception as e:
-            db.session.rollback()
-            return(str(e))
-    elif request.method == 'DELETE':
-        try:
-            books = Quote.query.delete()
-            db.session.commit()
-            return "All quotes deleted"
-        except Exception as e:
-            db.session.rollback()
-            return(str(e))
-    else:
-        # Invalid method, return error
-        return "All users invalid method", 404
-
-# Get a quotes, delete a quotes, update a user
-@app.route("/api/v1/resources/quotes/<int:id>", methods=['GET', 'PUT', 'DELETE'])
-def singleQuote():
-    if request.method == 'GET':
-        pass
-    elif request.method == 'PUT':
-        pass
-    elif request.method == 'DELETE':
-        pass
-    else:
-        # Invalid method, return error
-        pass
-
-# Get quotes with filters
-# Add a new quotes with parameters
-# Delete a quotes based on parameters
+# Quotes API:
+#   Get all quotes (filters are optional)
+#   Delete all quotes (filters are optional)
+#   Add quote user (filters required)
 @app.route("/api/v1/resources/quotes", methods=['GET', 'POST', 'DELETE'])
-def filteredQuotes():
-    if request.method == 'GET':
-        pass
-    elif request.method == 'POST':
-        pass
-    elif request.method == 'DELETE':
-        pass
-    else:
-        # Invalid method, return error
-        pass
+@cross_origin(origin='localhost',headers=['Content- Type','Authorization'])
+def allQuotes():
+    # Invalid method, return error
+    return "Waiting to be implemented", 404
+
+# Quotes API
+#   Get a quote by ID (filters ignored)
+#   Delete a quote by ID (filters ignored)
+#   Update a quote by ID (need at least parameter)
+@app.route("/api/v1/resources/quotes/<int:id>", methods=['GET', 'PUT', 'DELETE'])
+@cross_origin(origin='localhost',headers=['Content- Type','Authorization'])
+def singleQuote(id):
+    return "Waiting to be implemented", 404
+
+@app.route("/api/v1/resources", methods=['GET'])
+@cross_origin(origin='localhost',headers=['Content- Type','Authorization'])
+def allResources():
+    try:
+
+        users = Subscriber.query.all()
+        quotes = Quote.query.all()
+
+        result = {
+            'users': [u.serialize() for u in users],
+            'quotes': [q.serialize() for q in quotes]
+        }
+
+        return jsonify(result), 200
+
+    except Exception as e:
+            db.session.rollback()
+            print('Exception when getting all resources: {}'.format(str(e)))
+            return jsonify({'message': 'Exception when getting all resources'}), 404
 
 
 # Subscribe route

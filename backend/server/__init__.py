@@ -14,7 +14,6 @@ app = Flask(__name__)
 
 app.config['CORS_HEADERS'] = 'Content-Type'
 
-print(os.environ.get('APP_SETTINGS'))
 app.config.from_object(os.getenv('APP_SETTINGS'))
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
