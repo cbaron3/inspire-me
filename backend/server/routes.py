@@ -13,100 +13,37 @@ from server.secrets import FROM_NUMBER, TO_NUMBER
 from server import app, twilio_client, db
 from server.models import Subscriber, Quote
 
-# HTTP Actions
-    # Get
-        # Get resource
-            # Get all used quotes
-            # Get single used quote
-            # Get all users
-            # Get user
-    # Post
-        # Add user
-        # Add quote to tracked table
-    # Put
-        # Update user status
-    # Delete
-        # Delete user
-        # Delete quote from tracked quotes
-    # Patch
-        # Partial update to resource
-
-# Add config and dev ops settings
-# Add database
-    # postgres
-# Add all rest methods
 # Add authentication
     # basic auth https://stackoverflow.com/questions/44072750/how-to-send-basic-auth-with-axios
     # python side https://blog.miguelgrinberg.com/post/designing-a-restful-api-with-python-and-flask
     # track users on server side on server
     # https://gist.github.com/miguelgrinberg/5614326
-# Subscribe route
-@app.route('/api/subscribe', methods=['POST'])
-def subscribe():
-    params = request.get_json()
 
-    # If we are supplied a valid number, send subscription message
-
-    try:
-        number = params['number']
-
-        # Check here for valid with algorithm
-        valid = True
-
-        if valid:
-            # Start background task that adds subscriber to table and sends welcome message
-            return 'Success', 200
-        else:
-            return 'Failure', 400
-    except Exception as e:
-        print(str(e))
-        return 'Failure', 400
+# Add twilio helper functions
+#   subscribe is similar to POST except also sends a message using twilio. Check if number exists and validate both number and timezone
+#   receive handles twilio webhook. also for checking if user confirms registration. also add easter eggs like perhaps suicide pervention hotline number and the such
+    # similar to PUT request but modifies users CONFIRMED status
 
 
-@app.route('/sms/test', methods=['POST'])
-@cross_origin(origin='localhost',headers=['Content- Type','Authorization'])
-def frontend():
-    number = request.get_json()
-    print(number['number'])
-
-    message = twilio_client.messages.create(
-        #to=number['number'], 
-        to=TO_NUMBER,
-        from_=FROM_NUMBER,
-        body="Thank you for enrolling, please reply CONFIRMED to confirm")
-
-    return "Success"
-
-
-@app.route('/sms/receive', methods=['POST'])
-def sms():
-    number = request.form['From']
-    message_body = request.form['Body']
-    print(message_body)
-
-    resp = MessagingResponse()
-    if message_body == 'CONFIRMED':
-        resp.message('Entry confirmed')
-    else:
-        resp.message('Entry denied')
-    
-    return str(resp)
-
-
+# Route not found
 @app.errorhandler(404)
+@cross_origin(origin='localhost',headers=['Content- Type','Authorization'])
 def not_found_error(error):
-    return 'Invalid route', 404
+    return jsonify({'error': error, 'message': 'route not found'}), 404
 
+# Interal Server error
 @app.errorhandler(500)
+@cross_origin(origin='localhost',headers=['Content- Type','Authorization'])
 def internal_error(error):
     db.session.rollback()
-    return 'Error', 500
+    return jsonify({'error': error, 'message': 'internal server error'}), 500
 
 # Subscribers API:
 #   Get all users (filters are optional)
 #   Delete all users (filters are optional)
 #   Add new user (filters required)
 @app.route("/api/v1/resources/users", methods=['GET', 'POST', 'DELETE'])
+@cross_origin(origin='localhost',headers=['Content- Type','Authorization'])
 def allUsers():
     if request.method == 'GET':
         # Get all users
@@ -180,6 +117,7 @@ def allUsers():
 #   Delete a user by ID (filters ignored)
 #   Update a user by ID (need either parameter)
 @app.route("/api/v1/resources/users/<int:id>", methods=['GET', 'PUT', 'DELETE'])
+@cross_origin(origin='localhost',headers=['Content- Type','Authorization'])
 def singleUser(id):
     if request.method == 'GET':
         # Get a single user by ID
@@ -229,6 +167,10 @@ def singleUser(id):
             timezone = request.args.get('timezone')
             if timezone:
                 user.time = timezone
+
+            confirmed = request.args.get('confirmed')
+            if confirmed:
+                user.confirmed = confirmed
 
             db.session.commit()
             return jsonify(user.serialize()), 200
@@ -291,3 +233,56 @@ def filteredQuotes():
     else:
         # Invalid method, return error
         pass
+
+
+# Subscribe route
+@app.route('/api/subscribe', methods=['POST'])
+def subscribe():
+    params = request.get_json()
+
+    # If we are supplied a valid number, send subscription message
+
+    try:
+        number = params['number']
+
+        # Check here for valid with algorithm
+        valid = True
+
+        if valid:
+            # Start background task that adds subscriber to table and sends welcome message
+            return 'Success', 200
+        else:
+            return 'Failure', 400
+    except Exception as e:
+        print(str(e))
+        return 'Failure', 400
+
+
+@app.route('/sms/test', methods=['POST'])
+@cross_origin(origin='localhost',headers=['Content- Type','Authorization'])
+def frontend():
+    number = request.get_json()
+    print(number['number'])
+
+    message = twilio_client.messages.create(
+        #to=number['number'], 
+        to=TO_NUMBER,
+        from_=FROM_NUMBER,
+        body="Thank you for enrolling, please reply CONFIRMED to confirm")
+
+    return "Success"
+
+
+@app.route('/sms/receive', methods=['POST'])
+def sms():
+    number = request.form['From']
+    message_body = request.form['Body']
+    print(message_body)
+
+    resp = MessagingResponse()
+    if message_body == 'CONFIRMED':
+        resp.message('Entry confirmed')
+    else:
+        resp.message('Entry denied')
+    
+    return str(resp)
