@@ -194,8 +194,75 @@ def singleUser(id):
 @app.route("/api/v1/resources/quotes", methods=['GET', 'POST', 'DELETE'])
 @cross_origin(origin='localhost',headers=['Content- Type','Authorization'])
 def allQuotes():
-    # Invalid method, return error
-    return "Waiting to be implemented", 404
+    if request.method == 'GET':
+        # Get all quotes; with filters if included
+        try:
+            quote = request.args.get('quote')
+            quote_hash = request.args.get('quote_id')
+            freq = request.args.get('frequency')
+
+            # TODO: Ignoring filter by quote hash right now
+            # Bad design, not easily maintained
+            if quote and freq:
+                quotes = Quote.query.filter_by(quote=quote, frequency=freq)
+            elif freq:
+                quotes = Quote.query.filter_by(frequency=freq)
+            elif quote:
+                quotes = Quote.query.filter_by(quote=quote)
+            else:
+                quotes = Quote.query.all()
+
+            return jsonify([q.serialize() for q in quotes]), 200
+        except Exception as e:
+            db.session.rollback()
+            print('Exception when getting all quotes: {}'.format(str(e)))
+            return jsonify({'message': 'Exception when getting all quotes'}), 404
+
+    if request.method == 'DELETE':
+        # Delete all quotes; with filters if included
+        try:
+            quote = request.args.get('quote')
+            quote_hash = request.args.get('quote_id')
+            freq = request.args.get('frequency')
+
+            # TODO: Ignoring filter by quote hash right now
+            # Bad design, not easily maintained
+            if quote and freq:
+                quotes = Quote.query.filter_by(quote=quote, frequency=freq).delete()
+            elif freq:
+                quotes = Quote.query.filter_by(frequency=freq).delete()
+            elif quote:
+                quotes = Quote.query.filter_by(quote=quote).delete()
+            else:
+                quotes = Quote.query.delete()
+            
+            db.session.commit()
+            return jsonify({'Deleted': quotes}), 200
+        except Exception as e:
+            db.session.rollback()
+            print('Exception when deleting all quotes: {}'.format(str(e)))
+            return jsonify({'message': 'Exception when deleting all quotes'}), 404
+
+    if request.method == 'POST':
+        try:
+            quote = request.args.get('quote')
+            quote_hash = request.args.get('quote_id')
+            freq = request.args.get('frequency')
+
+            if quote_hash:
+                return jsonify({'message': 'Invalid parameters; Do not supply quote hash'}), 404
+            
+            # TODO: Check if quote already exists, if yes, do put
+            # TODO: generate hash of string
+            result = Quote(quote=quote, quote_hash=0)
+            db.session.add(result)
+            db.session.commit()
+            return "Quote added. Quote id={}".format(result.id)
+
+        except Exception as e:
+            db.session.rollback()
+            print('Exception when adding new quote: {}'.format(str(e)))
+            return jsonify({'message': 'Exception when adding new quote'}), 404
 
 # Quotes API
 #   Get a quote by ID (filters ignored)
@@ -204,7 +271,47 @@ def allQuotes():
 @app.route("/api/v1/resources/quotes/<int:id>", methods=['GET', 'PUT', 'DELETE'])
 @cross_origin(origin='localhost',headers=['Content- Type','Authorization'])
 def singleQuote(id):
-    return "Waiting to be implemented", 404
+        if request.method == 'GET':
+        # Get a single quote by ID
+        try:
+            quote = Quote.query.get(id)
+            if quote:
+                return jsonify(user.serialize()), 200
+            else:
+                return jsonify({'message': 'Quote with ID {} does not exist'.format(id)}), 404
+        except Exception as e:
+            db.session.rollback()
+            print('Exception when getting a quote: {}'.format(str(e)))
+            return jsonify({'message': 'Exception when getting a quote by id'}), 404
+
+    if request.method == 'DELETE':
+        try:
+            deleted = Quote.query.filter_by(id=id).delete()
+            db.session.commit()
+            if deleted:
+                return jsonify({'message': 'Quote with ID {} deleted'.format(id)}), 200
+            else:
+                return jsonify({'message': 'Quote with ID {} does not exist'.format(id)}), 404
+        except Exception as e:
+            db.session.rollback()
+            print('Exception when getting a quote: {}'.format(str(e)))
+            return jsonify({'message': 'Exception when deleting a quote by id'}), 404
+
+    if request.method == 'PUT':
+        # Update, should only need to update frequency. Going to increase by 1
+        try:
+            quote = Quote.query.get(id)
+            if quote:
+                quote.frequency += 1
+                db.session.commit()
+                return jsonify(quote.serialize()), 200
+            else:
+                return jsonify({'message': 'Quote with ID {} does not exist'.format(id)}), 404
+        except Exception as e:
+            db.session.rollback()
+            print('Exception when updating a quote: {}'.format(str(e)))
+            return jsonify({'message': 'Exception when updating a quote by id'}), 404
+
 
 @app.route("/api/v1/resources", methods=['GET'])
 @cross_origin(origin='localhost',headers=['Content- Type','Authorization'])
