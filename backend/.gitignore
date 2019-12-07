@@ -115,3 +115,10 @@ venv.bak/
 dmypy.json
 
 secrets.py
+
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace

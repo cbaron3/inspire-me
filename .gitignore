@@ -104,3 +104,10 @@ venv.bak/
 .mypy_cache/
 
 migrations/
+
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
