@@ -1,6 +1,38 @@
 from server import db
 from sqlalchemy import DateTime
 
+
+class Received(db.Model):
+    __tablename__ = 'received'
+
+    # Primary key
+    id = db.Column(db.Integer, primary_key=True)
+
+    # Number that sent us the message
+    number = db.Column(db.String())
+
+    # The received message
+    recv_msg = db.Column(db.String())
+
+    # The sent response
+    sent_msg = db.Column(db.String())
+
+    def __init__(self, number, received, sent):
+        self.number = number
+        self.recv_msg = received
+        self.sent_msg = sent
+
+    def __repr__(self):
+        return '<id {}>'.format(self.id)
+
+    def serialize(self):
+        return {
+            'id': self.id, 
+            'number': self.number,
+            'recv_msg': self.recv_msg,
+            'sent_msg': self.sent_msg
+        }
+
 # People subscribing to the inspire me service
 class Subscriber(db.Model):
     # Table name will be subscribers

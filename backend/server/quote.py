@@ -18,6 +18,13 @@ def inspiringQuote():
         print(parsed['contents']['quotes'][0]['date'])
     else:
         raise Exception('Error ' + str(parsed['error']['code']) + ' ' + parsed['error']['message'])
+    
+    result = {
+        'quote': parsed['contents']['quotes'][0]['quote'],
+        'author': parsed['contents']['quotes'][0]['author']
+    }
+
+    return result
 
 if __name__ == '__main__':
     try:

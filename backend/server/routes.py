@@ -13,6 +13,8 @@ from server.secrets import FROM_NUMBER, TO_NUMBER
 from server import app, twilio_client, db
 from server.models import Subscriber, Quote
 
+from server.util import validNumber, validTime
+
 # Add authentication
     # basic auth https://stackoverflow.com/questions/44072750/how-to-send-basic-auth-with-axios
     # python side https://blog.miguelgrinberg.com/post/designing-a-restful-api-with-python-and-flask
@@ -20,7 +22,7 @@ from server.models import Subscriber, Quote
     # https://gist.github.com/miguelgrinberg/5614326
 
 # Add twilio helper functions
-#   subscribe is similar to POST except also sends a message using twilio. Check if number exists and validate both number and timezone
+#   subscribe is similar to POST except also sends a message using twilio. Check if number exists and validate both number and time
 #   receive handles twilio webhook. also for checking if user confirms registration. also add easter eggs like perhaps suicide pervention hotline number and the such
     # similar to PUT request but modifies users CONFIRMED status
     # check if message comes from trusted source. if not, respond with URL 
@@ -36,14 +38,14 @@ from server.models import Subscriber, Quote
 @app.errorhandler(404)
 @cross_origin(origin='localhost',headers=['Content- Type','Authorization'])
 def not_found_error(error):
-    return jsonify({'error': error, 'message': 'route not found'}), 404
+    return jsonify({'error': '404', 'message': 'route not found'}), 404
 
 # Interal Server error
 @app.errorhandler(500)
 @cross_origin(origin='localhost',headers=['Content- Type','Authorization'])
 def internal_error(error):
     db.session.rollback()
-    return jsonify({'error': error, 'message': 'internal server error'}), 500
+    return jsonify({'error': '500', 'message': 'internal server error'}), 500
 
 # Subscribers API:
 #   Get all users (filters are optional)
@@ -56,15 +58,20 @@ def allUsers():
         # Get all users
         try:
             number = request.args.get('phone_number')
-            timezone = request.args.get('timezone')
-            
-            # TODO: Validate timezone and number
-            if number and timezone:
-                books = Subscriber.query.filter_by(number=number, time=timezone)
+            time = request.args.get('time')
+
+            if number and not validNumber(number):
+                return jsonify({'message': 'Invalid parameters; Phone number improperly formatted'}), 404
+
+            if time and not validTime(time, '%H:%M'):
+                return jsonify({'message': 'Invalid parameters; Time improperly formatted'}), 404
+
+            if number and time:
+                books = Subscriber.query.filter_by(number=number, time=time)
             elif number:
                 books = Subscriber.query.filter_by(number=number)
-            elif timezone:
-                books = Subscriber.query.filter_by(time=timezone)
+            elif time:
+                books = Subscriber.query.filter_by(time=time)
             else:
                 books = Subscriber.query.all()
 
@@ -78,15 +85,20 @@ def allUsers():
         # Delete all users
         try:
             number = request.args.get('phone_number')
-            timezone = request.args.get('timezone')
+            time = request.args.get('time')
             
-            # TODO: Validate timezone and number
-            if number and timezone:
-                deleted = Subscriber.query.filter_by(number=number, time=timezone).delete()
+            if number and not validNumber(number):
+                return jsonify({'message': 'Invalid parameters; Phone number improperly formatted'}), 404
+
+            if time and not validTime(time, '%H:%M'):
+                return jsonify({'message': 'Invalid parameters; Time improperly formatted'}), 404
+
+            if number and time:
+                deleted = Subscriber.query.filter_by(number=number, time=time).delete()
             elif number:
                 deleted = Subscriber.query.filter_by(number=number).delete()
-            elif timezone:
-                deleted = Subscriber.query.filter_by(time=timezone).delete()
+            elif time:
+                deleted = Subscriber.query.filter_by(time=time).delete()
             else:
                 deleted = Subscriber.query.delete()
 
@@ -100,17 +112,22 @@ def allUsers():
     if request.method == 'POST':
         try:
             number = request.args.get('phone_number')
-            timezone = request.args.get('timezone')
+            time = request.args.get('time')
 
-            # Check if number already exists
-            if not number or not timezone:
-                return jsonify({'message': 'Invalid parameters; Need both phone_number and timezone'}), 404
+            if number and not validNumber(number):
+                return jsonify({'message': 'Invalid parameters; Phone number improperly formatted'}), 404
+
+            if time and not validTime(time, '%H:%M'):
+                return jsonify({'message': 'Invalid parameters; Time improperly formatted'}), 404
+
+            if not number or not time:
+                return jsonify({'message': 'Invalid parameters; Need both phone_number and time'}), 404
             else:
                 has_number = Subscriber.query.filter_by(number=number).first()
                 if has_number:
                     return jsonify({'message': 'There exists a user with that phone number'.format(id)}), 404
                 else:
-                    result = Subscriber(number=number, time=timezone)
+                    result = Subscriber(number=number, time=time)
                     db.session.add(result)
                     db.session.commit()
                     return "Subscriber added. Subscriber id={}".format(result.id)
@@ -161,6 +178,14 @@ def singleUser(id):
 
             # If number supplied, update the number if does not exist in the table
             number = request.args.get('phone_number')
+            time = request.args.get('time')
+
+            if number and not validNumber(number):
+                return jsonify({'message': 'Invalid parameters; Phone number improperly formatted'}), 404
+
+            if time and not validTime(time, '%H:%M'):
+                return jsonify({'message': 'Invalid parameters; Time improperly formatted'}), 404
+
             if number:
                 # TODO: Check if valid phone number!!!
                 has_number = Subscriber.query.filter_by(number=number).first()
@@ -168,12 +193,9 @@ def singleUser(id):
                     return jsonify({'message': 'There exists a user with that phone number'.format(id)}), 404
                 else:
                     user.number = number
-            
-            # If timezone supplied, update it
-            # TODO: Validate time zone information!
-            timezone = request.args.get('timezone')
-            if timezone:
-                user.time = timezone
+    
+            if time:
+                user.time = time
 
             confirmed = request.args.get('confirmed')
             if confirmed:
@@ -271,7 +293,7 @@ def allQuotes():
 @app.route("/api/v1/resources/quotes/<int:id>", methods=['GET', 'PUT', 'DELETE'])
 @cross_origin(origin='localhost',headers=['Content- Type','Authorization'])
 def singleQuote(id):
-        if request.method == 'GET':
+    if request.method == 'GET':
         # Get a single quote by ID
         try:
             quote = Quote.query.get(id)

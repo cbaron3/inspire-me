@@ -11,6 +11,8 @@ class Config(object):
     CSRF_ENABLED = True
     SECRET_KEY = 'this-really-needs-to-be-changed'
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
+    #CELERY_BROKER_URL = os.environ.get('REDIS_URL')
+    #CELERY_RESULT_BACKEND = os.environ.get('REDIS_URL')
 
 class ProductionConfig(Config):
     DEBUG = False

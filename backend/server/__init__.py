@@ -3,7 +3,6 @@ import os
 from flask import Flask
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
-
 from os.path import join, dirname
 from dotenv import load_dotenv
 ENVDIR = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
@@ -21,6 +20,17 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 cors = CORS(app, resources={r"/foo": {"origins": "http://localhost:5000"}})
 
 db = SQLAlchemy(app)
+
+
+from flask_apscheduler import APScheduler
+scheduler = APScheduler()
+scheduler.init_app(app)
+scheduler.start()
+
+from server.task import my_job
+print(app.apscheduler.get_jobs())
+# https://apscheduler.readthedocs.io/en/v2.1.2/cronschedule.html
+app.apscheduler.add_job(func=my_job, trigger='cron', second='*/5', id='1') # trigger every 5 seconds. (every time seconds ends with 5)
 
 # Create twilio client
 from twilio.rest import Client
