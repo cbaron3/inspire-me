@@ -356,49 +356,66 @@ def allResources():
             return jsonify({'message': 'Exception when getting all resources'}), 404
 
 
-# Subscribe route
-@app.route('/api/subscribe', methods=['POST'])
+# Subscribe route adds a new user and sends off a text; maybe redirect?
+@app.route('/api/v1/subscribe', methods=['POST'])
 def subscribe():
-    params = request.get_json()
+    if request.method == 'POST':
+        try:
+            number = request.args.get('phone_number')
+            time = request.args.get('time')
 
-    # If we are supplied a valid number, send subscription message
+            if number and not validNumber(number):
+                return jsonify({'message': 'Invalid parameters; Phone number improperly formatted'}), 404
 
-    try:
-        number = params['number']
+            if time and not validTime(time, '%H:%M'):
+                return jsonify({'message': 'Invalid parameters; Time improperly formatted'}), 404
 
-        # Check here for valid with algorithm
-        valid = True
+            if not number or not time:
+                return jsonify({'message': 'Invalid parameters; Need both phone_number and time'}), 404
+            else:
+                has_number = Subscriber.query.filter_by(number=number).first()
+                if has_number:
+                    return jsonify({'message': 'There exists a user with that phone number'.format(id)}), 404
+                else:
+                    result = Subscriber(number=number, time=time)
+                    db.session.add(result)
+                    db.session.commit()
+                    message = twilio_client.messages.create(
+                                #to=number['number'], 
+                                to=number,
+                                from_=FROM_NUMBER,
+                                body="Thank you for enrolling, please reply CONFIRM to confirm")
 
-        if valid:
-            # Start background task that adds subscriber to table and sends welcome message
-            return 'Success', 200
-        else:
-            return 'Failure', 400
-    except Exception as e:
-        print(str(e))
-        return 'Failure', 400
+                    return "Subscriber added. Subscriber id={}".format(result.id)
+        except Exception as e:
+            db.session.rollback()
+            print('Exception when adding new users: {}'.format(str(e)))
+            return jsonify({'message': 'Exception when adding new users'}), 404
 
-
-@app.route('/sms/test', methods=['POST'])
-@cross_origin(origin='localhost',headers=['Content- Type','Authorization'])
-def frontend():
-    number = request.get_json()
-    print(number['number'])
-
-    message = twilio_client.messages.create(
-        #to=number['number'], 
-        to=TO_NUMBER,
-        from_=FROM_NUMBER,
-        body="Thank you for enrolling, please reply CONFIRMED to confirm")
-
-    return "Success"
-
-
+# On receive
 @app.route('/sms/receive', methods=['POST'])
 def sms():
+
+    # Grab number and message body
     number = request.form['From']
     message_body = request.form['Body']
-    print(message_body)
+    # Problem: how the number is formatted for twilio vs my api
+        # Find a way to match these numbers
+
+    # Number is in database:
+        # Text is CONFIRMED
+            # If user with number is confirmed:
+                # You are already confirmed! Text UNSUBSCRIBE to unsub
+        # Text is UNSUBSCRIBE
+            # Remove from database
+        # Text is neither
+            # Text CONFIRMED to confirm your subscription and UNSUBSCRIBE to unsubscribe
+        # Number is confirmed
+        # Number is not confirmed
+            # Text is CONFIRMED
+            # Text is not confirmed
+    # Number is not in database:
+        # Thanks for the text! This is inspireme.io, check us out for daily inspirational texts.
 
     resp = MessagingResponse()
     if message_body == 'CONFIRMED':

@@ -1,10 +1,16 @@
 from server import db
 from sqlalchemy import DateTime
 
-
+# Messages received from users
 class Received(db.Model):
     __tablename__ = 'received'
 
+    # Track
+        # ID, primary key
+        # Number, number that sent the message
+        # Recv_msg, message contents that was received
+        # Sent_msg, message that was sent by backend as response
+        
     # Primary key
     id = db.Column(db.Integer, primary_key=True)
 
@@ -37,6 +43,7 @@ class Received(db.Model):
 class Subscriber(db.Model):
     # Table name will be subscribers
     __tablename__ = 'subscribers'
+
     # Track 
     #   ID, primary key
     #   number, number to send/receive SMS to
