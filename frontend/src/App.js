@@ -1,12 +1,32 @@
 import React from 'react';
-import PhoneInput from './PhoneInput.js';
+import { BrowserRouter, Route, Switch } from 'react-router-dom';
+import ValidatedLoginForm from './components/ValidatedLoginForm'
+import Admin from './components/Admin'
+function Home() {
+  return (
+    <h1>
+      Home Page
+    </h1>
+  )
+}
+
+function About() {
+  return (
+    <h1>
+      Admin Page
+    </h1>
+  )
+}
 
 function App() {
   return (
-    <div className="App">
-      <h1>Test Page</h1>
-      <PhoneInput />
-    </div>
+    <main>
+      <Switch>
+        <Route path="/" component={Home} exact />
+        <Route path="/admin" component={ValidatedLoginForm} />
+        <Route path="/dashboard" component={Admin} />
+      </Switch>
+    </main>
   );
 }
 
