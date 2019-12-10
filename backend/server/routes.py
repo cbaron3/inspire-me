@@ -393,34 +393,50 @@ def subscribe():
             return jsonify({'message': 'Exception when adding new users'}), 404
 
 # On receive
-@app.route('/sms/receive', methods=['POST'])
+@app.route('/api/v1/receive', methods=['POST'])
 def sms():
+    resp = MessagingResponse()
 
     # Grab number and message body
-    number = request.form['From']
+    # TODO: Ignoring first two area code values. Only works for NA numbers
+    number = request.form['From'][2:]
     message_body = request.form['Body']
-    # Problem: how the number is formatted for twilio vs my api
-        # Find a way to match these numbers
 
-    # Number is in database:
-        # Text is CONFIRMED
-            # If user with number is confirmed:
-                # You are already confirmed! Text UNSUBSCRIBE to unsub
-        # Text is UNSUBSCRIBE
-            # Remove from database
-        # Text is neither
-            # Text CONFIRMED to confirm your subscription and UNSUBSCRIBE to unsubscribe
-        # Number is confirmed
-        # Number is not confirmed
-            # Text is CONFIRMED
-            # Text is not confirmed
-    # Number is not in database:
-        # Thanks for the text! This is inspireme.io, check us out for daily inspirational texts.
+    print('Message from {} with contents: {}'.format(number, message_body))
 
-    resp = MessagingResponse()
-    if message_body == 'CONFIRMED':
-        resp.message('Entry confirmed')
-    else:
-        resp.message('Entry denied')
+    # Check if number is in database
+    if number and not validNumber(number):
+        print('Invalid Number')
+        resp.message('Error')
+        return str(resp)
     
-    return str(resp)
+    has_number = Subscriber.query.filter_by(number=number).first()
+    if not has_number:
+        resp.message('Number not in database')
+        return str(resp)
+
+    # Valid number, valid database entry. Switch case
+    if message_body.lower() == 'confirmed':
+        if has_number.confirmed == True:
+            resp.message('Number already confirmed!')
+            return str(resp)
+        else:
+            has_number.confirmed = True
+            db.session.commit()
+            resp.message('Thanks for confirming!')
+            return str(resp)
+    elif message_body.lower() == 'unsubscribe':
+        try:
+            deleted = Subscriber.query.filter_by(number=number).delete()
+            db.session.commit()
+        except:
+           db.session.rollback()
+           resp.message('Error with unsubscribe')
+        if deleted:
+            resp.message('You have been unsubscribed!')
+        else:
+            resp.message('Error with unsubscribe')
+        return str(resp)
+    else:
+        resp.message('Text CONFIRMED to confirm your subscription and UNSUBSCRIBE to unsubscribe')
+        return str(resp)
