@@ -19,14 +19,16 @@ class PhoneInput extends React.Component {
       const { number } = this.state;
       console.log(number);
 
-      const url = 'http://0.0.0.0:5000/sms/test';
+      const url = 'http://0.0.0.0:5000/api/v1/subscribe';
       console.log(url);
 
-      axios.post(url, {number: number})
+      axios.post(url, {phone_number: number, time: '12:12'})
         .then(function (response) {
+            alert('Valid subscription!');
             console.log(response);
         })
         .catch(function (error) {
+            alert('Error when subscribing!');
             console.log(error);
         });
     }

@@ -1,7 +1,8 @@
 import React from 'react';
-import { BrowserRouter, Route, Switch } from 'react-router-dom';
-import ValidatedLoginForm from './components/ValidatedLoginForm'
-import Admin from './components/Admin'
+// import { BrowserRouter, Route, Switch } from 'react-router-dom';
+// import ValidatedLoginForm from './components/ValidatedLoginForm'
+// import Admin from './components/Admin'
+import PhoneInput from './PhoneInput';
 function Home() {
   return (
     <h1>
@@ -18,16 +19,24 @@ function About() {
   )
 }
 
+// function App() {
+//   return (
+//     <main>
+//       <Switch>
+//         <Route path="/" component={Home} exact />
+//         <Route path="/admin" component={ValidatedLoginForm} />
+//         <Route path="/dashboard" component={Admin} />
+//       </Switch>
+//     </main>
+//   );
+// }
+
 function App() {
   return (
     <main>
-      <Switch>
-        <Route path="/" component={Home} exact />
-        <Route path="/admin" component={ValidatedLoginForm} />
-        <Route path="/dashboard" component={Admin} />
-      </Switch>
+      <PhoneInput />
     </main>
-  );
+  )
 }
 
 export default App;

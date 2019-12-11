@@ -40,7 +40,10 @@ scheduler.start()
 # Add job to background tasks
 # TODO: Change time interval for cron
 from server.task import my_job
-app.apscheduler.add_job(func=my_job, trigger='cron', second='*/5', id='1')
+# Every 5 seconds
+#app.apscheduler.add_job(func=my_job, trigger='cron', second='*/5', id='1')
+# Every minute
+app.apscheduler.add_job(func=my_job, trigger='cron', second='0', id='1')
 
 # Create twilio client
 from twilio.rest import Client
